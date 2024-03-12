@@ -1,1 +1,2 @@
 1) se o espaço for maior doq o registro o que fazer com o espaço que sobra?
+2) updte linha 207

@@ -83,9 +83,9 @@ public class Livro implements Registro {
 
   public String toString() {
     return "ID: " + this.ID +
-        "\nISBN: " + this.isbn +
-        "\nTítulo: " + this.titulo +
-        "\nPreço: " + NumberFormat.getCurrencyInstance().format(this.preco);
+        " ISBN: " + this.isbn +
+        " Título: " + this.titulo +
+        " Preço: " + NumberFormat.getCurrencyInstance().format(this.preco);
   }
 
   @Override

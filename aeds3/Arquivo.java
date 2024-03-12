@@ -37,6 +37,8 @@ public class Arquivo<T extends Registro> {
     int ultimoID;
     long espacosVazios;
     long ondeTavaInformacao;
+    //caso tenha espaços vazios depois preciso mudar o endereco do apontador anterior
+    long auxiliar;
     arquivo.seek(0);
     ultimoID = arquivo.readInt();
     ultimoID++;
@@ -55,12 +57,12 @@ public class Arquivo<T extends Registro> {
     //se tiver espaço vazio
     while(espacosVazios > 0)  {
       
-      arquivo.seek(espacosVazios);
-      //pula a lapide
-      arquivo.readByte();
+      arquivo.seek(espacosVazios + 1);
+  
       short tam = arquivo.readShort();
+      auxiliar = arquivo.readLong();
       //se no espaco vazio couber o registro inserir
-      if(tam > ba.length){
+      if(tam >= ba.length){
 
         arquivo.seek(espacosVazios);
         long endereco = arquivo.getFilePointer();
@@ -72,11 +74,11 @@ public class Arquivo<T extends Registro> {
 
         //"Apagar" a informação de que esse espaço esta vazio
         arquivo.seek(ondeTavaInformacao);
-        arquivo.writeLong(-1);
+        arquivo.writeLong(auxiliar);
         return obj.getID();
       
       }
-      espacosVazios = arquivo.readLong();      
+      espacosVazios = auxiliar;      
     }
     arquivo.seek(arquivo.length());
     long endereco = arquivo.getFilePointer();
@@ -156,6 +158,7 @@ public class Arquivo<T extends Registro> {
 
           arquivo.seek(espacoLivre);
           arquivo.writeLong(endereco);
+          indiceDireto.delete(id);
 
           return true;
         
@@ -188,34 +191,74 @@ public class Arquivo<T extends Registro> {
     int tam;
     byte lapide;
     long endereco = indiceDireto.read(objAtualizado.getID()).getEndereco();
-    
+    long espacosVazios;
+    long ondeTavaInformacao;
 
 
     arquivo.seek(endereco);
-      lapide = arquivo.readByte();
-      tam = arquivo.readShort();
-      byte[] ba = new byte[tam];
-      arquivo.read(ba);
+    lapide = arquivo.readByte();
+    tam = arquivo.readShort();
+    byte[] ba = new byte[tam];
+    arquivo.read(ba);
 
-      if (lapide == ' ') {
-        obj.fromByteArray(ba);
-        if (obj.getID() == objAtualizado.getID()) {
-          byte[] ba2 = objAtualizado.toByteArray();
-          short tam2 = (short) ba2.length;
+    if (lapide == ' ') {
+      obj.fromByteArray(ba);
+      if (obj.getID() == objAtualizado.getID()) {
+        byte[] ba2 = objAtualizado.toByteArray();
+        short tam2 = (short) ba2.length;
 
-          if (tam2 <= tam) {
-            arquivo.seek(endereco + 1 + 2);
-            arquivo.write(ba2);
-          } else {
-            arquivo.seek(endereco);
-            arquivo.writeByte('*');
+        if (tam2 <= tam) {
+          arquivo.seek(endereco + 1 + 2);
+          arquivo.write(ba2);
+        } else {
+          this.delete(objAtualizado.getID());
+          // arquivo.seek(endereco);
+          // arquivo.writeByte('*');
+          
+          //TP
+          arquivo.seek(4);
+          //guarda o proximo vazio para passar pro anterior vazio
+          long aux = -1;
+          ondeTavaInformacao = arquivo.getFilePointer();
+          espacosVazios = arquivo.readLong();
+
+          while(espacosVazios > 0)  {
+      
+            arquivo.seek(espacosVazios);
+            //pula a lapide
+            arquivo.readByte();
+            tam = arquivo.readShort();
+            //pego o endereço do proximo espaço vazio
+            aux = arquivo.readLong();
             
-            arquivo.seek(arquivo.length());
-            arquivo.writeByte(' ');
-            arquivo.writeShort(tam2);
-            arquivo.write(ba2);
+            //se no espaco vazio couber o registro inserir
+            if(tam >= tam2){
+      
+              arquivo.seek(espacosVazios);
+              endereco = arquivo.getFilePointer();
+              arquivo.writeByte(' ');
+              arquivo.readShort();
+              arquivo.write(ba);
+      
+      
+              //"Apagar" a informação de que esse espaço esta vazio
+              arquivo.seek(ondeTavaInformacao);
+              arquivo.writeLong(aux);
+              indiceDireto.update(new ParIDEndereco(objAtualizado.getID(), endereco));
+              return true;
+            
+            }
+            espacosVazios = aux;      
           }
-          return true;
+
+          arquivo.seek(arquivo.length());
+          endereco = arquivo.getFilePointer();
+          arquivo.writeByte(' ');
+          arquivo.writeShort(tam2);
+          arquivo.write(ba2);
+        }
+        indiceDireto.update(new ParIDEndereco(objAtualizado.getID(), endereco));
+        return true;
         }
       
     }
@@ -508,6 +551,28 @@ public class Arquivo<T extends Registro> {
     (new File("dados/temp5.db")).delete();
     (new File("dados/temp6.db")).delete();
     arquivo = new RandomAccessFile(nomeArquivo, "rw");
+  }
+
+
+  public void ImprimeTudao() throws Exception {
+    T obj = construtor.newInstance();
+    int tam;
+    byte lapide;
+    
+
+    arquivo.seek(TAM_CABECALHO);
+    System.out.println("Lapide || Tamanho || Dados");
+    while (arquivo.getFilePointer() < arquivo.length()) {
+      
+      lapide = arquivo.readByte();
+      tam = arquivo.readShort();
+      byte[] ba = new byte[tam];
+      arquivo.read(ba);
+
+      
+      obj.fromByteArray(ba);
+      System.out.println("  " + lapide + "        " + tam + "          Registro = " + obj);
+    }
   }
 
 }

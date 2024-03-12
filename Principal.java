@@ -15,6 +15,7 @@ public class Principal {
     Livro l4 = new Livro(-1, "9788582714911", "Memória", 55.58F);
     Livro l5 = new Livro(-1, "9786587150062", "Com Amor", 48.9F);
     Livro l6 = new Livro(-1, "9788584290483", "arthur", 39.90F);
+    Livro l7 = new Livro(-1, "9788584290483", "TP1 Aeds3", 39.90F);
     int id1, id2, id3, id4, id5;
 
     try {
@@ -36,22 +37,26 @@ public class Principal {
       id5 = arqLivros.create(l5);
       l5.setID(id5);
 
-      System.out.println(arqLivros.read(3));
-      System.out.println(arqLivros.read(1));
-      System.out.println(arqLivros.read(2));
-
-      System.out.println("Exclusáo do livro 2");
+      arqLivros.ImprimeTudao();
       if (arqLivros.delete(id2))
       System.out.println("Livro de ID " + id2 + " excluído");
 
-      System.out.println(arqLivros.read(2));
-      System.out.println(arqLivros.read(3));
-      l5.setID(3);
-      arqLivros.update(l5);
-      System.out.println(arqLivros.read(3));
-      arqLivros.create(l6);
-      arqLivros.delete(3);
-      //2B de tamanho
+      l3.setID(5);
+      arqLivros.ImprimeTudao();
+
+      arqLivros.update(l3);
+      
+      arqLivros.ImprimeTudao();
+
+      arqLivros.create(l2);
+
+      arqLivros.ImprimeTudao();
+
+      arqLivros.create(l5);
+       
+      arqLivros.reorganizar();
+
+      arqLivros.ImprimeTudao();
 
       
       // else
